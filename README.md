@@ -1,23 +1,38 @@
 # Installing dependencies
 
-- pgvector
+## PostgreSQL database with the pgvector extension installed
+This demo needs a PostgreSQL database with [`pgvector`](https://github.com/pgvector/pgvector) installed.
+Many package managers like Homebrew and `apt` have pre-packaged version of `pgvector`.
 
-```bash
-pip install langchain
-pip install openai
-pip install faiss-cpu
-pip install pgvector
-pip install tiktoken
-pip install unstructured
-pip install tabulate
+Don't forget to activate the extension for the database used in the demo:
+```sql
+CREATE EXTENSION vector;
 ```
 
-# Getting list of REPOS
+## Installing python dependencies
+
 ```bash
-curl 'https://api.splitgraph.com/gql/cloud/unified/graphql' -H 'Accept-Encoding: gzip, deflate, br' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Connection: keep-alive' -H 'DNT: 1' -H 'Origin: https://api.splitgraph.com' --data-binary '{"query":"query {\n  namespace(namespace: \"cityofchicago\") {\n    namespace\n    repositoriesByNamespace {\n      nodes {\n        repository\n        namespace\n        externalMetadata\n        repoProfileByNamespaceAndRepository {\n          readme\n          metadata\n        }\n        latestTables {\n          nodes {\n            tableName\n            tableSchema\n          }\n        }\n      }\n    }\n  }\n}\n"}' --compressed > cityofchicago-repos.json
+# create venv
+python3 -m venv venv
+# activate venv
+. venv/bin/activate
+# install deps
+pip install langchain openai pgvector tiktoken unstructured psycopg2 tabulate
 ```
 
 # Env vars
 
-- `OPENAI_API_KEY`
-- `PG_CONN_STR`
+The code in the demo uses the following env vars:
+
+- `OPENAI_API_KEY`, eg: `sk-F9Ci...2J`
+- `PG_CONN_STR_LOCAL`, eg: `postgresql://myuser:***@localhost:5432/mydb`
+- `PG_CONN_STR_DDN`, eg: `postgresql://4ce270ae3cdd4440aed5d105869949c5:***@data.splitgraph.com:5432/ddn`
+
+# Usage
+
+```bash
+# first, index the repositories in namespace 'cityofchicago'
+python3 index_repos.py cityofchicago
+# query the repositories in the cityofchicago namespace
+python query.py cityofchicago 'How many restaurants are there in Chicago?'
+```
